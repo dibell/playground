@@ -17,7 +17,7 @@ class SFUpload extends LitElement {
   }
 
   static get properties() { 
-    return { files: Object }
+    return { files: Array }
   }
 
   uploadPart(part) {
