@@ -25,6 +25,16 @@ import {lensPath} from 'ramda';
 //   `size`: File size in bytes.  `totalStr`: Human-readable total size of the file.
 //   `loaded`: Bytes transferred so far.  `loadedStr`: Human-readable uploaded size at the moment.
 
+const rs = (len) => {
+  var arr = new Uint8Array(len/2);
+  window.crypto.getRandomValues(arr);
+  return  Array.from(arr, (dec) => dec.toString(16)).join('');
+}
+
+const getRandomUUID = () => {
+  return `${rs(8)}-${rs(4)}-${rs(4)}-${rs(4)}-${rs(12)}`
+}
+
 
 const data = {
   id: "123",
@@ -118,6 +128,7 @@ class SFUpload extends LitElement {
           margin-bottom: 5px;
         }
       </style>
+      ${getRandomUUID()}
       <input type="file" id="file" class="upload" multiple
          onchange="${(e) => this._fileChange(e.target.files)}">
       ${this.renderFiles(files)}
