@@ -2,6 +2,12 @@
 <head>
   <!-- Polyfills only needed for Firefox and Edge. -->
   <script src="./node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+<style>
+  body {
+      background: #eee;
+      font-family: arial, sans;
+  }
+</style>
 </head>
 <body>
   <!-- Works only on browsers that support Javascript modules like
@@ -9,6 +15,9 @@
   <script type="module" src="./upload.js"></script>
   
   <sf-upload></sf-upload>
+
+  <!--script type="module" src="./parent-element.js"></script>
+  <parent-element></parent-element-->
   
 </body>
 </html>

@@ -5,8 +5,10 @@
   "main": "index.js",
   "dependencies": {
     "@polymer/lit-element": "^0.5.2",
+    "@webcomponents/webcomponentsjs": "^2.1.1",
     "polymer-cli": "^1.8.0",
-    "@webcomponents/webcomponentsjs": "^2.1.1"
+    "ramda": "^0.25.0",
+    "uuid": "3.1.0"
   },
   "devDependencies": {},
   "scripts": {
