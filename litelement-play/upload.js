@@ -1,8 +1,15 @@
 import {LitElement, html} from '@polymer/lit-element';
 import {repeat} from 'lit-html/lib/repeat';
-import {lensPath} from 'ramda';
+// have to do this as babel-plugin-ramda is not currently available in polymer serve/build
+import append from 'ramda/es/append';
+import assoc from 'ramda/es/assoc';
+import assocPath from 'ramda/es/assocPath';
+import update from 'ramda/es/update';
+import lensPath from 'ramda/es/lensPath';
+import view from 'ramda/es/view';
+import set from 'ramda/es/set';
 
-// File (standard file object) 
+// File (like the standard file object) 
 //   name
 //   size
 //   type
@@ -25,25 +32,39 @@ import {lensPath} from 'ramda';
 //   `size`: File size in bytes.  `totalStr`: Human-readable total size of the file.
 //   `loaded`: Bytes transferred so far.  `loadedStr`: Human-readable uploaded size at the moment.
 
-const rs = (len) => {
-  var arr = new Uint8Array(len/2);
-  window.crypto.getRandomValues(arr);
-  return  Array.from(arr, (dec) => dec.toString(16)).join('');
-}
 
+// just for dev
 const getRandomUUID = () => {
+  const rs = (len) => {
+    var arr = new Uint8Array(len/2);
+    window.crypto.getRandomValues(arr);
+    return  Array.from(arr, (dec) => dec.toString(16)).join('');
+  }
   return `${rs(8)}-${rs(4)}-${rs(4)}-${rs(4)}-${rs(12)}`
 }
 
+const getDummyData = (filename) => {
+  const data = {
+    id: getRandomUUID(),
+    parts: [
+      {url: `http://${filename}/part1`, size: 123},
+      {url: `http://${filename}/part2`, size: 123},
+      {url: `http://${filename}/part3`, size: 12},
+    ]
+  };
+  return data;
+}
 
-const data = {
-  id: "123",
-  parts: [
-    {url: "http://test1", size: 123, uploaded: false},
-    {url: "http://test2", size: 123, uploaded: false},
-    {url: "http://test3", size: 12, uploaded: false},
-  ]
-};
+const getFile = (name, files) => {
+  const index = files.findIndex(v => v.name === name);
+  return {file: files[index], index}
+}
+
+const setFileStatus = (status, file) => 
+  assoc('status', status, file);
+
+const updateFiles = (file, index, files) =>
+  update(index, file)(files);
 
 
 class SFUpload extends LitElement {
@@ -59,33 +80,33 @@ class SFUpload extends LitElement {
     return { files: Array }
   }
 
-  uploadPart(part) {
+  uploadPart(file, part) {
     setTimeout(() => {
-      var newFiles = [
-         ...this.files
-      ]
-      newFiles[0].upload.parts[0].uploaded = true;
-      this.files = newFiles;
+      console.log('uploadPart done', file.name, part);
+      const fileIndex = this.files.findIndex(v => v.name === file.name);
+      const partIndex = this.files[fileIndex].upload.parts.findIndex(v => v.url === part.url);
+
+      const newPart = assoc('status', 'done')(this.files[fileIndex].upload.parts[partIndex])
+      const newParts = update(partIndex, newPart)(this.files[fileIndex].upload.parts);
+      const newFile = assocPath(['upload', 'parts'], newParts)(this.files[fileIndex]);
+      this.files = update(fileIndex, newFile)(this.files);
+      console.log(JSON.stringify(this.files, null, 2));
     }, Math.random()*1000);
   }
 
   getParts(file) {
-    console.log(file);
     setTimeout(() => {
-      file.upload = data;
-      var newFiles = [
-        ...this.files
-      ];
-      newFiles.push(file);
-      this.files = newFiles;
+      file.upload = getDummyData(file.name);
+      this.files = append(file)(this.files);
 
       file.upload.parts.forEach(part => {
-         this.uploadPart(part);
+        this.uploadPart(file, part);
       });
     }, Math.random()*1000);
   }
 
   _fileChange(files) {
+    this.files = [];
     for (var i = 0; i < files.length; i++) {
       this.getParts(files[i]);
     }
@@ -95,7 +116,7 @@ class SFUpload extends LitElement {
     if (upload) {
       return html`
         ${repeat(upload.parts, (part) =>
-          html`<div>Part: ${part.url} ${part.uploaded}</div>`)}
+          html`<div>Part: ${part.url} ${part.status}</div>`)}
       `;
     }
   }
@@ -128,7 +149,6 @@ class SFUpload extends LitElement {
           margin-bottom: 5px;
         }
       </style>
-      ${getRandomUUID()}
       <input type="file" id="file" class="upload" multiple
          onchange="${(e) => this._fileChange(e.target.files)}">
       ${this.renderFiles(files)}
