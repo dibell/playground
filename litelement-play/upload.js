@@ -8,6 +8,9 @@ import update from 'ramda/es/update';
 import lensPath from 'ramda/es/lensPath';
 import view from 'ramda/es/view';
 import set from 'ramda/es/set';
+import all from 'ramda/es/all';
+import propEq from 'ramda/es/propEq';
+import pathOr from 'ramda/es/pathOr';
 
 // File (like the standard file object) 
 //   name
@@ -90,7 +93,16 @@ class SFUpload extends LitElement {
       const newParts = update(partIndex, newPart)(this.files[fileIndex].upload.parts);
       const newFile = assocPath(['upload', 'parts'], newParts)(this.files[fileIndex]);
       this.files = update(fileIndex, newFile)(this.files);
-      console.log(JSON.stringify(this.files, null, 2));
+
+      // console.log(JSON.stringify(this.files, null, 2));
+      // check if all are done
+      const parts = pathOr([], ['upload', 'parts'], this.files[fileIndex]);
+      if (all(propEq('status', 'done'), parts)) {
+        console.log('all done');
+      } else {
+        console.log('still waiting');
+      }
+
     }, Math.random()*1000);
   }
 
