@@ -83,6 +83,16 @@ class SFUpload extends LitElement {
     return { files: Array }
   }
 
+  completeUpload(file) {
+    setTimeout(() => {
+      console.log('Upload complete', file.name, file.upload.id);
+
+      const fileIndex = this.files.findIndex(v => v.name === file.name);
+      const newFile = assoc('status', 'done')(this.files[fileIndex]);
+      this.files = update(fileIndex, newFile)(this.files);
+    }, Math.random()*1000);
+  }
+
   uploadPart(file, part) {
     setTimeout(() => {
       console.log('uploadPart done', file.name, part);
@@ -99,8 +109,7 @@ class SFUpload extends LitElement {
       const parts = pathOr([], ['upload', 'parts'], this.files[fileIndex]);
       if (all(propEq('status', 'done'), parts)) {
         console.log('all done');
-      } else {
-        console.log('still waiting');
+        this.completeUpload(this.files[fileIndex]);
       }
 
     }, Math.random()*1000);
@@ -142,7 +151,8 @@ class SFUpload extends LitElement {
         }
       </style>
       <div class="file">
-        <strong>${file.name}</strong> Upload ID: ${file.upload.id}
+        <strong>${file.name}</strong> Status: ${file.status}
+        <div>Upload ID: ${file.upload.id}</div>
         ${this.renderParts(file.upload)}
       </div>`
     }
