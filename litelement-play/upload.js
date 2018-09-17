@@ -112,7 +112,7 @@ class SFUpload extends LitElement {
         this.completeUpload(this.files[fileIndex]);
       }
 
-    }, Math.random()*1000);
+    }, Math.random()*2000);
   }
 
   getParts(file) {
@@ -136,8 +136,11 @@ class SFUpload extends LitElement {
   renderParts(upload) {
     if (upload) {
       return html`
-        ${repeat(upload.parts, (part) =>
-          html`<div>Part: ${part.url} ${part.status}</div>`)}
+        ${repeat(upload.parts, (part) => {
+          if (part.status !== 'done') {
+            return html`<div class="progress"><div class="value" style="width: 50%"></div></div>`
+          }
+        })}
       `;
     }
   }
@@ -146,14 +149,35 @@ class SFUpload extends LitElement {
     if (file) {
       return html`
       <style>
-        div.file {
+        .file {
           border: 1px solid #ddd;
+          padding: 10px;
+          margin-bottom: 5px;
+          line-height: 1.5;
+        }
+        .done {
+          font-weight: bold;
+          color: hsla(83, 40%, 51%, 0.94);  
+        }
+        .progress {
+          background-color: hsl(214, 0%, 95%);
+          height: 8px;
+          width: 100%;
+          margin-bottom: 2px;
+        }
+        .progress .value {
+          background-color: hsl(214, 86%, 70%);
+          height: 100%;
+          transition: 0.1s width linear;
         }
       </style>
       <div class="file">
-        <strong>${file.name}</strong> Status: ${file.status}
-        <div>Upload ID: ${file.upload.id}</div>
-        ${this.renderParts(file.upload)}
+        ${file.status==='done' 
+            ? html`<span class="done">&#x2714;<span>`
+            : html`<span></span>`
+        }
+        <span>${file.name}</span> <span>&#x2718;</span>
+        ${file.status!=='done' ? this.renderParts(file.upload) : ''}
       </div>`
     }
   }
@@ -165,14 +189,47 @@ class SFUpload extends LitElement {
   }
 
   _render({files}) {
+    // TODO - use style templates and custom variables?
     return html`
       <style>
-        input.upload {
-          margin-bottom: 5px;
-        }
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+:host {
+  display: inline-block;
+  width: 100%;
+}
+
+.container {
+  display: inline-flex;
+  margin: 5px;
+}
+
+.upload-button {
+  color: hsl(214, 86%, 55%); 
+  padding: 10px;
+  background: hsla(214, 61%, 25%, 0.05);   
+}
+
+input.visually-hidden:focus + label {
+  background: hsla(214, 61%, 25%, 0.05);   
+}
+
+input.visually-hidden:hover + label {
+  background: hsla(214, 61%, 25%, 0.1);   
+}
+
       </style>
-      <input type="file" id="file" class="upload" multiple
+      <div class="container">
+      <input type="file" id="file" class="visually-hidden" multiple
          onchange="${(e) => this._fileChange(e.target.files)}">
+      <label class="upload-button" for="file">Upload files...</label>
+      </div>
       ${this.renderFiles(files)}
     `
   }
